@@ -3,7 +3,6 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
 	"github.com/go-resty/resty/v2"
 	"github.com/thedevsaddam/gojsonq"
 	"os"
@@ -27,7 +26,7 @@ func getSha256(src string) string {
 	return sha256String
 }
 
-func checkForStudent(stuId, seq, jwsession, userAgent string) {
+func checkForStudent(stuName, stuId, seq, jwsession, userAgent string) {
 
 	configInfo := gojsonq.New().File("./config.json")
 	province := configInfo.Reset().Find("province").(string)
@@ -60,10 +59,24 @@ func checkForStudent(stuId, seq, jwsession, userAgent string) {
 		"signatureHeader": signatureHeader,
 	}).Post("https://teacher.wozaixiaoyuan.com/heat/save.json")
 	if err != nil {
-		cmd.Send(printInfo{code: 1, funcName: "checkForStudent", info: "执行代打卡发生错误:" + err.Error()})
+		cmd.Send(printInfo{code: 2, funcName: "checkForStudent", info: "执行代打卡发生错误:" + err.Error()})
 		return
 	}
-	fmt.Println(stuId, string(post.Body()))
+	msg := printInfo{
+		funcName: "checkForStudent",
+		name:     stuName,
+	}
+	postJson := gojsonq.New().JSONString(string(post.Body()))
+	if int(postJson.Reset().Find("code").(float64)) == 0 {
+		msg.code = 1
+		msg.status = "正常"
+	} else {
+		msg.code = 3
+		msg.status = "失败"
+		msg.info = "发生错误，错误信息为：" + postJson.Reset().Find("message").(string)
+	}
+	cmd.Send(msg)
+	//fmt.Println(stuId, string(post.Body()))
 }
 
 func dailyCheck(seq int) {
@@ -88,7 +101,7 @@ func dailyCheck(seq int) {
 			"User-Agent": userAgent,
 		}).Post("https://teacher.wozaixiaoyuan.com/heat/getHeatUsers.json")
 		if err != nil {
-			cmd.Send(printInfo{code: 1, funcName: "dailyCheck", info: "未打卡名单请求错误,错误信息为:" + err.Error()})
+			cmd.Send(printInfo{code: 2, funcName: "dailyCheck", info: "未打卡名单请求错误,错误信息为:" + err.Error()})
 			return
 		}
 		//postMap := JsonByteToMap(post.Body())
@@ -96,8 +109,7 @@ func dailyCheck(seq int) {
 		if postInfo.Find("code") != -10 {
 			if len(postInfo.Reset().Find("data").([]interface{})) == 0 {
 				if page == 1 {
-					go func() { cmd.Send(printInfo{code: 1, funcName: "dailyCheck", info: "没有打卡信息或者打卡没有开始!"}) }()
-
+					cmd.Send(printInfo{code: 2, funcName: "dailyCheck", info: "没有打卡信息或者打卡没有开始!"})
 					return
 				}
 				break
@@ -110,15 +122,13 @@ func dailyCheck(seq int) {
 			page++
 			//time.Sleep(1 * time.Second)
 		} else {
-
-			cmd.Send(printInfo{code: 1, funcName: "dailyCheck", info: "jwsession失效,请更换!"})
+			cmd.Send(printInfo{code: 2, funcName: "dailyCheck", info: "jwsession失效,请更换!"})
 			break
 		}
 	}
-	fmt.Println("开始执行打卡...")
+	cmd.Send(printInfo{code: 2, funcName: "dailyCheck", info: "开始执行打卡"})
 	for i := 0; i < len(unsignedStuId); i++ {
-		fmt.Println(unsignedName[i], unsignedStuId[i])
-		checkForStudent(unsignedStuId[i], strconv.Itoa(seq), jwsession, userAgent)
+		checkForStudent(unsignedName[i], unsignedStuId[i], strconv.Itoa(seq), jwsession, userAgent)
 		//time.Sleep(1 * time.Second)
 	}
 }
@@ -133,7 +143,7 @@ func getEveningSignId(jwsession string) (signId string) {
 		"page":    "1",
 	}).Post("https://teacher.wozaixiaoyuan.com/signManage/getList.json")
 	if err != nil {
-		cmd.Send(printInfo{code: 1, funcName: "getEveningSignId", info: "请求晚检签到id发生错误,错误信息为:" + err.Error()})
+		cmd.Send(printInfo{code: 2, funcName: "getEveningSignId", info: "请求晚检签到id发生错误,错误信息为:" + err.Error()})
 		return "0" //发生错误
 	}
 	//postInfo := JsonByteToMap(post.Body())
@@ -169,7 +179,7 @@ func getUnsignedList(signId, jwsession string) (unsignedList []map[string]interf
 			"targetId": "",
 		}).Post(url)
 		if err != nil {
-			cmd.Send(printInfo{code: 1, funcName: "getUnsignedList", info: "请求晚检未签到名单发生错误,错误信息为:" + err.Error()})
+			cmd.Send(printInfo{code: 2, funcName: "getUnsignedList", info: "请求晚检未签到名单发生错误,错误信息为:" + err.Error()})
 			return unsignedList
 		}
 		postInfo := gojsonq.New().JSONString(string(post.Body()))
@@ -201,7 +211,7 @@ func doSignEvening(unsignedList []map[string]interface{}, jwsession string) {
 		}).Post(url)
 		if err != nil {
 			msg := printInfo{
-				code:     0,
+				code:     3,
 				funcName: "doSignEvening",
 				name:     unsignedInfo["name"].(string),
 				info:     "执行晚检代签发生错误,错误信息为:" + err.Error(),
@@ -211,15 +221,18 @@ func doSignEvening(unsignedList []map[string]interface{}, jwsession string) {
 			return
 		}
 		msg := printInfo{
-			code:     2,
+
 			funcName: "doSignEvening",
 			name:     unsignedInfo["name"].(string),
 		}
 		rJson := gojsonq.New().JSONString(string(post.Body()))
 		if int(rJson.Reset().Find("code").(float64)) == 0 {
+			msg.code = 1
 			msg.status = "正常"
 		} else {
+			msg.code = 3
 			msg.status = "失败"
+			msg.info = "代签失败，失败信息为" + rJson.Reset().Find("message").(string)
 		}
 		cmd.Send(msg)
 	}
@@ -231,16 +244,16 @@ func eveningSignOperate() {
 	jwsession := configInfo.Reset().Find("jwsession").(string)
 	signId := getEveningSignId(jwsession)
 	if signId == "0" {
-		cmd.Send(printInfo{code: 1, funcName: "eveningSignOperate", info: "请求签到信息发生错误"})
+		cmd.Send(printInfo{code: 2, funcName: "eveningSignOperate", info: "请求签到信息发生错误"})
 	} else if signId == "1" {
-		cmd.Send(printInfo{code: 1, funcName: "eveningSignOperate", info: "未到(或已过)签到时间"})
+		cmd.Send(printInfo{code: 2, funcName: "eveningSignOperate", info: "未到(或已过)签到时间"})
 	} else {
 		unsignedList := getUnsignedList(signId, jwsession)
 		if len(unsignedList) != 0 {
 			// 执行签到
 			doSignEvening(unsignedList, jwsession)
 		} else {
-			cmd.Send(printInfo{code: 1, funcName: "eveningSignOperate", info: "获取签到名单失败,可能所有同学已经签到"})
+			cmd.Send(printInfo{code: 2, funcName: "eveningSignOperate", info: "获取签到名单失败,可能所有同学已经签到"})
 		}
 	}
 }

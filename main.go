@@ -25,11 +25,11 @@ var (
 func (r printInfo) String() (s string) {
 	if r.code == 1 {
 		s += fmt.Sprintf("function: %s | name: %s | status: %s \n", r.funcName, r.name, r.status)
-		s += fmt.Sprintf("info: %s\n", r.info)
 	} else if r.code == 2 {
 		s += fmt.Sprintf("function: %s | info: %s\n", r.funcName, r.info)
 	} else if r.code == 3 {
 		s += fmt.Sprintf("function: %s | name: %s | status: %s \n", r.funcName, r.name, r.status)
+		s += fmt.Sprintf("info: %s\n", r.info)
 	}
 	return s
 }

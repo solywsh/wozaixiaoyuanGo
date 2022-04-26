@@ -47,7 +47,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			} else {
 				go func() { eveningSignOperate() }()
 			}
-			return m, tea.Quit
+			return m, nil
 			//return m, tea.Quit
 		}
 	case printInfo:
