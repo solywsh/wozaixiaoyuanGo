@@ -1,18 +1,17 @@
 # wozaixiaoyuanGo
 
-## 使用
+## How to use
 
-在同一目录下创建`config.json`，并写入一下内容
+首先在程序**同一目录下**创建`config.json`，并写入以下内容：
 
-| key           | function                         | type     |
-| ------------- | -------------------------------- | -------- |
-| jwsession     | 我在校园的密钥                   | string   |
-| userAgent     | 设备标识                         | string   |
-| pushPlusToken | PushPlus的token，用于接收名单    | []string |
-| province      | 省份，日检日报提交哈希加密时使用 | string   |
-| city          | 城市，日检日报提交哈希加密时使用 | string   |
+| key       | function                         | type   |
+| --------- | -------------------------------- | ------ |
+| jwsession | 我在校园的密钥                   | string |
+| userAgent | 设备标识                         | string |
+| province  | 省份，日检日报提交哈希加密时使用 | string |
+| city      | 城市，日检日报提交哈希加密时使用 | string |
 
-demo：
+比如`config.json`：
 
 ```json
 {
@@ -21,8 +20,8 @@ demo：
   "province": "陕西省",
   "city": "西安市"
 }
-
 ```
 
+然后执行程序即可：
 
-
+![demo](demo.gif)
