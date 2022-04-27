@@ -111,6 +111,7 @@ func dailyCheck(seq int) {
 			if len(postInfo.Reset().Find("data").([]interface{})) == 0 {
 				if page == 1 {
 					cmd.Send(printInfo{code: 2, funcName: "dailyCheck", info: "没有打卡信息或者打卡没有开始!"})
+					pause()
 					cmd.Send(tea.Quit())
 					return
 				}
@@ -125,6 +126,7 @@ func dailyCheck(seq int) {
 			//time.Sleep(1 * time.Second)
 		} else {
 			cmd.Send(printInfo{code: 2, funcName: "dailyCheck", info: "jwsession失效,请更换!"})
+			pause()
 			cmd.Send(tea.Quit())
 			break
 		}
@@ -136,6 +138,7 @@ func dailyCheck(seq int) {
 		//time.Sleep(1 * time.Second)
 	}
 	cmd.Send(printInfo{code: 2, funcName: "dailyCheck", info: "签到完成!"})
+	pause()
 	cmd.Send(tea.Quit())
 }
 
@@ -186,6 +189,7 @@ func getUnsignedList(signId, jwsession string) (unsignedList []map[string]interf
 		}).Post(url)
 		if err != nil {
 			cmd.Send(printInfo{code: 2, funcName: "getUnsignedList", info: "请求晚检未签到名单发生错误,错误信息为:" + err.Error()})
+			pause()
 			cmd.Send(tea.Quit())
 			return unsignedList
 		}
@@ -251,9 +255,11 @@ func eveningSignOperate() {
 	signId := getEveningSignId(jwsession)
 	if signId == "0" {
 		cmd.Send(printInfo{code: 2, funcName: "eveningSignOperate", info: "请求签到信息发生错误"})
+		pause()
 		cmd.Send(tea.Quit())
 	} else if signId == "1" {
 		cmd.Send(printInfo{code: 2, funcName: "eveningSignOperate", info: "未到(或已过)签到时间"})
+		pause()
 		cmd.Send(tea.Quit())
 	} else {
 		unsignedList := getUnsignedList(signId, jwsession)
@@ -263,9 +269,11 @@ func eveningSignOperate() {
 			time.Sleep(1 * time.Second)
 			doSignEvening(unsignedList, jwsession)
 			cmd.Send(printInfo{code: 2, funcName: "eveningSignOperate", info: "代签完成!"})
+			pause()
 			cmd.Send(tea.Quit())
 		} else {
 			cmd.Send(printInfo{code: 2, funcName: "eveningSignOperate", info: "获取签到名单失败,可能所有同学已经签到"})
+			pause()
 			cmd.Send(tea.Quit())
 		}
 	}

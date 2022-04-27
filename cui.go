@@ -15,6 +15,10 @@ type printInfo struct {
 	info     string
 }
 
+type pauseInfo struct {
+	info string
+}
+
 var (
 	appStyle        = lipgloss.NewStyle().Margin(1, 2, 0, 2)
 	spinnerStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("63"))      //定义全局变量
@@ -62,9 +66,10 @@ func (r printInfo) String() (s string) {
 type model struct {
 	items         []string
 	index         int
-	spinner       spinner.Model
+	spinner       spinner.Model //加载动画
 	printInfoList []printInfo
-	doTask        bool
+	doTask        bool      // 控制是否显示加载动画
+	pause         pauseInfo //暂停时显示的信息
 }
 
 func (m model) Init() tea.Cmd {
@@ -93,23 +98,32 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			//fmt.Println(m.items[m.index])
 			m.doTask = true
 			if m.index == 0 {
+				m.index = 4
 				// 使用异步的方式去启动
 				go dailyCheck(1)
 			} else if m.index == 1 {
+				m.index = 4
 				go dailyCheck(2)
 			} else {
+				m.index = 4
 				go eveningSignOperate()
 			}
 			return m, nil
 			//return m, tea.Quit
 		}
 	case printInfo:
+		// 接收打印信号
 		m.printInfoList = append(m.printInfoList[1:], msg)
 		return m, nil
 	case spinner.TickMsg:
+		// 接收进度动画信号
 		var spinnerCmd tea.Cmd
 		m.spinner, spinnerCmd = m.spinner.Update(msg)
 		return m, spinnerCmd
+	case pauseInfo:
+		// 接收暂停显示信号
+		m.pause = msg
+		return m, nil
 	}
 	return m, nil
 }
@@ -135,6 +149,9 @@ func (m model) View() string {
 				s += res.String()
 			}
 		}
+	}
+	if m.pause.info != "" {
+		s += yellow.Render(m.pause.info) + "\n"
 	}
 	s += "\n按住 Ctrl+C 或 Q 退出\n"
 	s += "power by https://github.com/solywsh/wozaixiaoyuanGo"
