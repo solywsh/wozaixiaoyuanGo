@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/go-resty/resty/v2"
 	"github.com/thedevsaddam/gojsonq"
 	"os"
@@ -110,6 +111,7 @@ func dailyCheck(seq int) {
 			if len(postInfo.Reset().Find("data").([]interface{})) == 0 {
 				if page == 1 {
 					cmd.Send(printInfo{code: 2, funcName: "dailyCheck", info: "没有打卡信息或者打卡没有开始!"})
+					cmd.Send(tea.Quit())
 					return
 				}
 				break
@@ -123,14 +125,18 @@ func dailyCheck(seq int) {
 			//time.Sleep(1 * time.Second)
 		} else {
 			cmd.Send(printInfo{code: 2, funcName: "dailyCheck", info: "jwsession失效,请更换!"})
+			cmd.Send(tea.Quit())
 			break
 		}
 	}
-	cmd.Send(printInfo{code: 2, funcName: "dailyCheck", info: "开始执行打卡"})
+	cmd.Send(printInfo{code: 2, funcName: "dailyCheck", info: "开始执行打卡.."})
+	time.Sleep(1 * time.Second)
 	for i := 0; i < len(unsignedStuId); i++ {
 		checkForStudent(unsignedName[i], unsignedStuId[i], strconv.Itoa(seq), jwsession, userAgent)
 		//time.Sleep(1 * time.Second)
 	}
+	cmd.Send(printInfo{code: 2, funcName: "dailyCheck", info: "签到完成!"})
+	cmd.Send(tea.Quit())
 }
 
 func getEveningSignId(jwsession string) (signId string) {
@@ -180,6 +186,7 @@ func getUnsignedList(signId, jwsession string) (unsignedList []map[string]interf
 		}).Post(url)
 		if err != nil {
 			cmd.Send(printInfo{code: 2, funcName: "getUnsignedList", info: "请求晚检未签到名单发生错误,错误信息为:" + err.Error()})
+			cmd.Send(tea.Quit())
 			return unsignedList
 		}
 		postInfo := gojsonq.New().JSONString(string(post.Body()))
@@ -221,7 +228,6 @@ func doSignEvening(unsignedList []map[string]interface{}, jwsession string) {
 			return
 		}
 		msg := printInfo{
-
 			funcName: "doSignEvening",
 			name:     unsignedInfo["name"].(string),
 		}
@@ -245,15 +251,22 @@ func eveningSignOperate() {
 	signId := getEveningSignId(jwsession)
 	if signId == "0" {
 		cmd.Send(printInfo{code: 2, funcName: "eveningSignOperate", info: "请求签到信息发生错误"})
+		cmd.Send(tea.Quit())
 	} else if signId == "1" {
 		cmd.Send(printInfo{code: 2, funcName: "eveningSignOperate", info: "未到(或已过)签到时间"})
+		cmd.Send(tea.Quit())
 	} else {
 		unsignedList := getUnsignedList(signId, jwsession)
 		if len(unsignedList) != 0 {
 			// 执行签到
+			cmd.Send(printInfo{code: 2, funcName: "eveningSignOperate", info: "开始代签..."})
+			time.Sleep(1 * time.Second)
 			doSignEvening(unsignedList, jwsession)
+			cmd.Send(printInfo{code: 2, funcName: "eveningSignOperate", info: "代签完成!"})
+			cmd.Send(tea.Quit())
 		} else {
 			cmd.Send(printInfo{code: 2, funcName: "eveningSignOperate", info: "获取签到名单失败,可能所有同学已经签到"})
+			cmd.Send(tea.Quit())
 		}
 	}
 }

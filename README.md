@@ -18,9 +18,6 @@ demo：
 {
   "jwsession": "afbf1231231231231231319482131d",
   "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 14_2_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.18(0x18001236) NetType/WIFI Language/zh_CN",
-  "pushPlusToken": [
-    "231sa123123213213122312eda69f1d3"
-  ],
   "province": "陕西省",
   "city": "西安市"
 }
