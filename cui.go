@@ -122,6 +122,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, spinnerCmd
 	case pauseInfo:
 		// 接收暂停显示信号
+		m.doTask = true
 		m.pause = msg
 		return m, nil
 	}
@@ -151,7 +152,7 @@ func (m model) View() string {
 		}
 	}
 	if m.pause.info != "" {
-		s += yellow.Render(m.pause.info) + "\n"
+		s += yellow.Render(m.pause.info)
 	}
 	s += "\n按住 Ctrl+C 或 Q 退出\n"
 	s += "power by https://github.com/solywsh/wozaixiaoyuanGo"
