@@ -13,7 +13,7 @@
 
 比如`config.yaml`：
 
-```json
+```yaml
 # 我在校园密钥,抓包获得
 jwsession: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
