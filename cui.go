@@ -5,6 +5,8 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"strconv"
+	"time"
 )
 
 type printInfo struct {
@@ -170,4 +172,13 @@ func newModel() model {
 		printInfoList: make([]printInfo, numLastResults),
 		spinner:       s,
 	}
+}
+
+func pause() {
+	flag := 5
+	for i := 0; i < 5; i++ {
+		cmd.Send(pauseInfo{info: "程序将在" + strconv.Itoa(flag-i) + "秒后自动关闭...\n"})
+		time.Sleep(1 * time.Second)
+	}
+	cmd.Send(tea.Quit())
 }

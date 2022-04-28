@@ -6,7 +6,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/go-resty/resty/v2"
 	"github.com/thedevsaddam/gojsonq"
-	"os"
 	"strconv"
 	"time"
 )
@@ -29,10 +28,8 @@ func getSha256(src string) string {
 
 func checkForStudent(stuName, stuId, seq, jwsession, userAgent string) {
 
-	configInfo := gojsonq.New().File("./config.json")
-	province := configInfo.Reset().Find("province").(string)
-	city := configInfo.Reset().Find("city").(string)
-
+	province := yamlConfig.province
+	city := yamlConfig.city
 	now := time.Now()
 	signTime := strconv.FormatInt(now.UnixNano()/1e6, 10) //时间戳精确到毫秒
 
@@ -82,9 +79,8 @@ func checkForStudent(stuName, stuId, seq, jwsession, userAgent string) {
 
 func dailyCheck(seq int) {
 	date := getDate()
-	configInfo := gojsonq.New().File("./config.json")
-	jwsession := configInfo.Reset().Find("jwsession").(string)
-	userAgent := configInfo.Reset().Find("userAgent").(string)
+	jwsession := yamlConfig.jwsession
+	userAgent := yamlConfig.userAgent
 
 	client := resty.New()
 	page := 1
@@ -249,9 +245,7 @@ func doSignEvening(unsignedList []map[string]interface{}, jwsession string) {
 }
 
 func eveningSignOperate() {
-	// 读取配置文件
-	configInfo := gojsonq.New().File("./config.json")
-	jwsession := configInfo.Reset().Find("jwsession").(string)
+	jwsession := yamlConfig.jwsession
 	signId := getEveningSignId(jwsession)
 	if signId == "0" {
 		cmd.Send(printInfo{code: 2, funcName: "eveningSignOperate", info: "请求签到信息发生错误"})
@@ -279,16 +273,3 @@ func eveningSignOperate() {
 	}
 }
 
-func pathExists(path string) (bool, error) {
-	_, err := os.Stat(path)
-	//当为空文件或文件夹存在
-	if err == nil {
-		return true, nil
-	}
-	//os.IsNotExist(err)为true，文件或文件夹不存在
-	if os.IsNotExist(err) {
-		return false, nil
-	}
-	//其它类型，不确定是否存在
-	return false, err
-}
