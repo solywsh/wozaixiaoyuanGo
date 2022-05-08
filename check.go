@@ -7,8 +7,11 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/thedevsaddam/gojsonq"
 	"strconv"
+	"sync"
 	"time"
 )
+
+var wg sync.WaitGroup
 
 func getDate() string {
 	// 表单提交使用
@@ -75,6 +78,7 @@ func checkForStudent(stuName, stuId, seq, jwsession, userAgent string) {
 	}
 	cmd.Send(msg)
 	//fmt.Println(stuId, string(post.Body()))
+	wg.Done()
 }
 
 func dailyCheck(seq int) {
@@ -129,10 +133,12 @@ func dailyCheck(seq int) {
 	}
 	cmd.Send(printInfo{code: 2, funcName: "dailyCheck", info: "开始执行打卡.."})
 	time.Sleep(1 * time.Second)
+	wg.Add(len(unsignedStuId))
 	for i := 0; i < len(unsignedStuId); i++ {
-		checkForStudent(unsignedName[i], unsignedStuId[i], strconv.Itoa(seq), jwsession, userAgent)
+		go checkForStudent(unsignedName[i], unsignedStuId[i], strconv.Itoa(seq), jwsession, userAgent)
 		//time.Sleep(1 * time.Second)
 	}
+	wg.Wait()
 	cmd.Send(printInfo{code: 2, funcName: "dailyCheck", info: "签到完成!"})
 	pause()
 	cmd.Send(tea.Quit())
@@ -241,6 +247,7 @@ func doSignEvening(unsignedList []map[string]interface{}, jwsession string) {
 			msg.info = "代签失败，失败信息为" + rJson.Reset().Find("message").(string)
 		}
 		cmd.Send(msg)
+		wg.Done()
 	}
 }
 
@@ -261,7 +268,9 @@ func eveningSignOperate() {
 			// 执行签到
 			cmd.Send(printInfo{code: 2, funcName: "eveningSignOperate", info: "开始代签..."})
 			time.Sleep(1 * time.Second)
-			doSignEvening(unsignedList, jwsession)
+			wg.Add(len(unsignedList))
+			go doSignEvening(unsignedList, jwsession)
+			wg.Wait() // 阻塞等待完成
 			cmd.Send(printInfo{code: 2, funcName: "eveningSignOperate", info: "代签完成!"})
 			pause()
 			cmd.Send(tea.Quit())
@@ -272,4 +281,3 @@ func eveningSignOperate() {
 		}
 	}
 }
-

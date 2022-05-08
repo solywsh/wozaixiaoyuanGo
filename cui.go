@@ -133,9 +133,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // View 渲染列表
 func (m model) View() string {
-	s := "WoZaiXiaoYuanGo For Teacher\n\n"
+	//s := "WoZaiXiaoYuanGo For Teacher\n\n"
+	s := lawngreen.Render("WoZaiXiaoYuanGo For Teacher") + "\n\n"
 	if m.doTask {
-		s += m.spinner.View() + " 正在执行中...\n"
+		s += m.spinner.View() + "正在执行中...\n"
 	} else {
 		s += "请选择:\n"
 		for i, item := range m.items {
