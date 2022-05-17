@@ -1,5 +1,6 @@
 /config.json
 /.idea
 /main.exe
-/config.yaml
+/teacher/config.yaml
 /resource
+/student/bak.config.yaml

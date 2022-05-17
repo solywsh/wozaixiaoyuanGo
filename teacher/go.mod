@@ -1,4 +1,4 @@
-module github.com/solywsh/wozaixiaoyuanGo
+module github.com/solywsh/wozaixiaoyuanGo/teacher
 
 go 1.18
 
