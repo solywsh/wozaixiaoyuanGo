@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"github.com/go-resty/resty/v2"
 	"github.com/thedevsaddam/gojsonq"
 	"log"
@@ -117,14 +118,16 @@ func (u User) getSignMessage() (res int, signId, logId string) {
 func (u User) doEveningCheck(signId, logId string) {
 	url := "https://student.wozaixiaoyuan.com/sign/doSign.json"
 	client := resty.New()
+	fmt.Println(signId, logId, u.Jwsession)
 	post, err := client.R().SetHeaders(map[string]string{
-		"jwsession": u.Jwsession,
-	}).SetQueryParams(map[string]string{
+		"JWSESSION":  u.Jwsession,
+		"User-Agent": u.UserAgent,
+	}).SetBody(map[string]string{
 		"signId":    signId,
 		"city":      "西安市",
 		"id":        logId,
-		"latitude":  "34.10133361816406",
-		"longitude": "108.65825653076172",
+		"latitude":  "34.10154079861111",
+		"longitude": "108.65831163194444",
 		"country":   "中国",
 		"district":  "鄠邑区",
 		"township":  "五竹街道",
