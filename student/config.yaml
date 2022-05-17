@@ -1,6 +1,6 @@
 user:
   # 姓名,id
-  - name: 王世浩
+  - name: '张三'
     # 晨检
     morningCheck:
       enable: true # 是否开启,true/false,如果为空[checkTime]和[endTime]可以为空
@@ -15,41 +15,19 @@ user:
       checkTime: '21:30:00'
       endTime: '23:59:00'
     # 我在校园密钥
-    jwsession: 'f2e3bead5d76451e9d14e0d8fe01ffe3'
-
-    # qq机器人,用做提醒
+    jwsession: ''
+    # qq机器人,用做反馈
     # powered by: https://github.com/solywsh/qqBot-revue
     # 在使用前需要添加qq 3056159050为好友,发送`/help`根据提示获取密钥
     # 如果enable为false,[userId]和[token]可以为空
     # 也可以根据链接自己部署一个revue机器人,如果你有好的建议,欢迎到仓库提交issue
     qqBotRevue:
-      enable: true
-      userId: '1228014966' # 自己的qq
-      token: '37476a87-abaa-4f98-a892-b772517b35b0' # 获取到的token,注意qq和token为绑定关系
+      enable: false # 是否开启true/false
+      userId: '' # 自己的qq
+      token: '' # 获取到的token,注意qq和token为绑定关系
     # 设备标识,用以规避更换设备登录提示,这里建议使用自己手机的设备标识
     userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_2_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.18(0x18001236) NetType/WIFI Language/zh_CN'
     # 所在省份,在日检日报提交表单哈希时使用
-    province: 陕西省
+    province: ''
     # 所在省份的城市,在日检日报提交表单哈希时使用
-    city: 西安市
-  - name: 张书凡
-    morningCheck:
-      enable: true
-      checkTime: '07:30:00'
-      endTime: '10:00:00'
-    afternoonCheck:
-      enable: true
-      checkTime: '11:30:00'
-      endTime: '15:00:00'
-    eveningCheck:
-      enable: true
-      checkTime: '21:30:00'
-      endTime: '23:59:00'
-    jwsession: 'c7fc807db32a403dab7cba1e4dd7b9bc'
-    qqBotRevue:
-      enable: true
-      userId: '1146867689'
-      token: '97f55543-df83-4734-b862-f309f37f8abe'
-    userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.20(0x18001435) NetType/WIFI Language/zh_CN'
-    province: 陕西省
-    city: 西安市
+    city: ''
