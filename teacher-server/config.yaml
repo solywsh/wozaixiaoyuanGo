@@ -40,14 +40,14 @@ user:
       endTime: '10:00:00' # 签到时间,签到的机制是,在大于[checkTime]并小于[endTime]之间执行,一天只会执行一次
     afternoonCheck:
       enable: true
-      checkTime: '14:50:00'
+      checkTime: '14:30:00'
       endTime: '15:00:00'
     eveningCheck:
       enable: true
-      checkTime: '23:50:00'
+      checkTime: '23:30:00'
       endTime: '23:59:00'
     # 我在校园密钥
-    jwsession: 'f80f4b05056744d89971c19eda69f1d3'
+    jwsession: 'f93a2485bcb9429c8647698345a7224d'
     # qq机器人,用做反馈
     # powered by: https://github.com/solywsh/qqBot-revue
     # 在使用前需要添加qq 3056159050为好友,发送`/help`根据提示获取密钥

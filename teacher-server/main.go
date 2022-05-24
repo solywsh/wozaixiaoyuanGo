@@ -60,9 +60,5 @@ func operation() {
 }
 
 func main() {
-	//operation()
-	yamlConfig, _ := NewConf("./config.yaml")
-	yamlConfig.User[0].qqBotRevueEvent("标题", "人数为:", []string{"王世浩", "康宇"})
-	yamlConfig.User[0].QqBotRevue.Module = "detailed"
-	yamlConfig.User[0].qqBotRevueEvent("标题", "人数为:", []string{"王世浩", "康宇"})
+	operation()
 }

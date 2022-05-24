@@ -136,6 +136,7 @@ func (u User) DailyCheck(seq int) {
 			if len(postInfo.Reset().Find("data").([]interface{})) == 0 {
 				if page == 1 {
 					log.Println("[dailyCheck]seq=", seq, u.Name, "没有打卡信息或者打卡没有开始!")
+					u.qqBotRevueEvent("日检日报", "没有打卡信息或者打卡没有开始!")
 					return
 				}
 				break
@@ -149,6 +150,7 @@ func (u User) DailyCheck(seq int) {
 			//time.Sleep(1 * time.Second)
 		} else {
 			log.Println("[dailyCheck]seq=", seq, u.Name, "jwsession失效,请更换!")
+			u.qqBotRevueEvent("日检日报", "jwsession失效,请更换!")
 			break
 		}
 	}
@@ -170,6 +172,7 @@ func (u User) DailyCheck(seq int) {
 
 func (u User) getEveningSignId() (signId string) {
 	client := resty.New()
+
 	post, err := client.R().SetHeaders(map[string]string{
 		"JWSESSION": u.Jwsession,
 	}).SetQueryParams(map[string]string{
@@ -181,7 +184,7 @@ func (u User) getEveningSignId() (signId string) {
 		log.Println("[getEveningSignId]", u.Name, "请求晚检签到id发生错误,错误信息为:"+err.Error())
 		return "0" //发生错误
 	}
-
+	//fmt.Println(string(post.Body()))
 	postInfo := gojsonq.New().JSONString(string(post.Body()))
 	if int(postInfo.Find("code").(float64)) == 0 {
 		signEndTime := postInfo.Reset().Find("data.[0].end").(string)
@@ -237,25 +240,31 @@ func (u User) getUnsignedList(signId string) (unsignedList []map[string]interfac
 func (u User) doSignEvening(unsignedList []map[string]interface{}) {
 	url := "https://teacher.wozaixiaoyuan.com/signManage/adminSign.json"
 	var unsignedName []string
+	wg.Add(len(unsignedList))
 	for _, unsignedInfo := range unsignedList {
-		client := resty.New()
 		unsignedName = append(unsignedName, unsignedInfo["name"].(string))
-		post, err := client.R().SetHeaders(map[string]string{
-			"JWSESSION": u.Jwsession,
-		}).SetQueryParams(map[string]string{
-			"id":   unsignedInfo["id"].(string),
-			"type": "1",
-		}).Post(url)
-		if err != nil {
-			log.Println("[doSignEvening]", u.Name, unsignedInfo["name"].(string), "执行晚检代签发生错误,错误信息为:"+err.Error())
-			return
-		}
-		rJson := gojsonq.New().JSONString(string(post.Body()))
-		if int(rJson.Reset().Find("code").(float64)) == 0 {
-			log.Println("[doSignEvening]", u.Name, unsignedInfo["name"].(string), "代签失败,返回信息为:"+string(post.Body()))
-		}
-		wg.Done()
+		go func(info map[string]interface{}) {
+			client := resty.New()
+			post, err := client.R().SetHeaders(map[string]string{
+				"JWSESSION": u.Jwsession,
+			}).SetQueryParams(map[string]string{
+				"id":   info["id"].(string),
+				"type": "1",
+			}).Post(url)
+			if err != nil {
+				log.Println("[doSignEvening]", u.Name, info["name"].(string), "执行晚检代签发生错误,错误信息为:"+err.Error())
+				return
+			}
+			rJson := gojsonq.New().JSONString(string(post.Body()))
+			if int(rJson.Reset().Find("code").(float64)) != 0 {
+				log.Println("[doSignEvening]", u.Name, info["name"].(string), "代签失败,返回信息为:"+string(post.Body()))
+			} else {
+				log.Println("[doSignEvening]", u.Name, info["name"].(string), "签到成功")
+			}
+			wg.Done()
+		}(unsignedInfo)
 	}
+	wg.Wait() // 阻塞等待完成
 	if u.QqBotRevue.Module == "brief" {
 		u.qqBotRevueEvent("晚检代签", "人数为:", unsignedName)
 	} else {
@@ -267,18 +276,18 @@ func (u User) EveningSignOperate() {
 	signId := u.getEveningSignId()
 	if signId == "0" {
 		log.Println("[doSignEvening]", u.Name, "请求签到信息发生错误")
+		u.qqBotRevueEvent("晚检代签", "请求签到信息发生错误")
 	} else if signId == "1" {
 		log.Println("[doSignEvening]", u.Name, "未到(或已过)签到时间")
+		u.qqBotRevueEvent("晚检代签", "未到(或已过)签到时间")
 	} else {
 		unsignedList := u.getUnsignedList(signId)
 		if len(unsignedList) != 0 {
-			time.Sleep(1 * time.Second)
-			wg.Add(len(unsignedList))
-			go u.doSignEvening(unsignedList)
-			wg.Wait() // 阻塞等待完成
+			u.doSignEvening(unsignedList)
 			log.Println("[doSignEvening]", u.Name, "代签完成!")
 		} else {
 			log.Println("[doSignEvening]", u.Name, "获取签到名单失败,可能所有同学已经签到")
+			u.qqBotRevueEvent("晚检代签", "未到(或已过)签到时间")
 		}
 	}
 }
