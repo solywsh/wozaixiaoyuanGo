@@ -3,7 +3,6 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
 	"github.com/go-resty/resty/v2"
 	"github.com/thedevsaddam/gojsonq"
 	"log"
@@ -118,7 +117,6 @@ func (u User) getSignMessage() (res int, signId, logId string) {
 func (u User) doEveningCheck(signId, logId string) {
 	url := "https://student.wozaixiaoyuan.com/sign/doSign.json"
 	client := resty.New()
-	fmt.Println(signId, logId, u.Jwsession)
 	post, err := client.R().SetHeaders(map[string]string{
 		"JWSESSION":  u.Jwsession,
 		"User-Agent": u.UserAgent,
