@@ -262,7 +262,7 @@ func (u User) doSignEvening(unsignedList []map[string]interface{}) {
 			if int(rJson.Reset().Find("code").(float64)) != 0 {
 				log.Println("[doSignEvening]", u.Name, info["name"].(string), "代签失败,返回信息为:"+string(post.Body()))
 			} else {
-				log.Println("[doSignEvening]", u.Name, info["name"].(string), "签到成功")
+				//log.Println("[doSignEvening]", u.Name, info["name"].(string), "签到成功")
 			}
 			wg.Done()
 		}(unsignedInfo)

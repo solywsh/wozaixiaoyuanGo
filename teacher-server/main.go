@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"time"
 )
 
@@ -10,7 +11,7 @@ func operation() {
 	var yamlConfig Config
 	var err error
 	eventMap := make(map[string]map[string]int) // 记录今日任务执行flag
-
+	log.Println("开始运行...")
 	for {
 		dataNow = getDate()
 		// 第二天执行刷新
