@@ -14,6 +14,7 @@ import (
 // arg[0]:title
 // arg[1]:content
 // arg[2]:nameList []string
+//
 //example:
 //  yamlConfig, _ := NewConf("./config.yaml")
 //	yamlConfig.User[0].qqBotRevueEvent("标题", "内容")
@@ -107,7 +108,9 @@ func (u User) checkForStudent(stuName, stuId, seq string) {
 	postJson := gojsonq.New().JSONString(string(post.Body()))
 	if int(postJson.Reset().Find("code").(float64)) != 0 {
 		log.Println("[checkForStudent]", u.Name, stuName, "执行代打卡请求错误:"+string(post.Body()))
+		return
 	}
+	// log.Println("[doSignEvening]", u.Name, stuName, "签到成功")
 	wg.Done()
 }
 
@@ -161,11 +164,11 @@ func (u User) DailyCheck(seq int) {
 		//time.Sleep(1 * time.Second)
 	}
 	wg.Wait()
-	log.Println("[dailyCheck]seq=", seq, u.Name, "打卡完成!")
+	log.Println("[dailyCheck]seq =", seq, u.Name, "打卡完成!")
 	if u.QqBotRevue.Module == "brief" {
-		u.qqBotRevueEvent("日检日报代签", "人数为:", unsignedName)
+		u.qqBotRevueEvent("日检日报代签", "("+u.Name+")"+"人数为:", unsignedName)
 	} else {
-		u.qqBotRevueEvent("日检日报代签", "名单为:", unsignedName)
+		u.qqBotRevueEvent("日检日报代签", "("+u.Name+")"+"名单为:", unsignedName)
 	}
 
 }
@@ -266,9 +269,9 @@ func (u User) doSignEvening(unsignedList []map[string]interface{}) {
 	}
 	wg.Wait() // 阻塞等待完成
 	if u.QqBotRevue.Module == "brief" {
-		u.qqBotRevueEvent("晚检代签", "人数为:", unsignedName)
+		u.qqBotRevueEvent("晚检代签", "("+u.Name+")"+"人数为:", unsignedName)
 	} else {
-		u.qqBotRevueEvent("晚检代签", "名单为:", unsignedName)
+		u.qqBotRevueEvent("晚检代签", "("+u.Name+")"+"名单为:", unsignedName)
 	}
 }
 
@@ -276,10 +279,10 @@ func (u User) EveningSignOperate() {
 	signId := u.getEveningSignId()
 	if signId == "0" {
 		log.Println("[doSignEvening]", u.Name, "请求签到信息发生错误")
-		u.qqBotRevueEvent("晚检代签", "请求签到信息发生错误")
+		u.qqBotRevueEvent("晚检代签", "("+u.Name+")"+"请求签到信息发生错误")
 	} else if signId == "1" {
 		log.Println("[doSignEvening]", u.Name, "未到(或已过)签到时间")
-		u.qqBotRevueEvent("晚检代签", "未到(或已过)签到时间")
+		u.qqBotRevueEvent("晚检代签", "("+u.Name+")"+"未到(或已过)签到时间")
 	} else {
 		unsignedList := u.getUnsignedList(signId)
 		if len(unsignedList) != 0 {
@@ -287,7 +290,7 @@ func (u User) EveningSignOperate() {
 			log.Println("[doSignEvening]", u.Name, "代签完成!")
 		} else {
 			log.Println("[doSignEvening]", u.Name, "获取签到名单失败,可能所有同学已经签到")
-			u.qqBotRevueEvent("晚检代签", "未到(或已过)签到时间")
+			u.qqBotRevueEvent("晚检代签", "("+u.Name+")"+"未到(或已过)签到时间")
 		}
 	}
 }

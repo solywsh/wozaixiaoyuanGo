@@ -35,7 +35,7 @@ func operation() {
 				eventMap[user.Name]["morning"] != 1 {
 				eventMap[user.Name]["morning"] = 1 // flag 置为1
 				// 晨检
-				go user.DailyCheck(1)
+				user.DailyCheck(1)
 			}
 
 			if user.AfternoonCheck.Enable &&
@@ -44,7 +44,7 @@ func operation() {
 				eventMap[user.Name]["afternoon"] != 1 {
 				eventMap[user.Name]["afternoon"] = 1 // flag 置为1
 				// 午检
-				go user.DailyCheck(2)
+				user.DailyCheck(2)
 			}
 
 			if user.EveningCheck.Enable &&
@@ -53,7 +53,7 @@ func operation() {
 				eventMap[user.Name]["evening"] != 1 {
 				eventMap[user.Name]["evening"] = 1
 				// 晚检
-				go user.EveningSignOperate()
+				user.EveningSignOperate()
 			}
 		}
 	}
