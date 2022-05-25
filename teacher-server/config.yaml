@@ -44,7 +44,7 @@ user:
       endTime: '15:00:00'
     eveningCheck:
       enable: true
-      checkTime: '23:30:00'
+      checkTime: '21:30:00'
       endTime: '23:59:00'
     # 我在校园密钥
     jwsession: 'f93a2485bcb9429c8647698345a7224d'
@@ -54,7 +54,7 @@ user:
     # 如果enable为false,[userId]和[token]可以为空
     # 也可以根据链接自己部署一个revue机器人,如果你有好的建议,欢迎到仓库提交issue
     qqBotRevue:
-      enable: false # 是否开启true/false
+      enable: true # 是否开启true/false
       module: brief # 消息发送方式brief/detailed,brief只发送人数,detailed发送名单
       userId: '1228014966' # 自己的qq
       token: '37476a87-abaa-4f98-a892-b772517b35b0' # 获取到的token,注意qq和token为绑定关系
