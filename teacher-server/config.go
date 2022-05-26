@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/ghodss/yaml"
 	"io/ioutil"
 	"log"
@@ -75,11 +74,11 @@ func NewConf(yamlPath string) (conf Config, err error) {
 	return conf, nil
 }
 
-func main() {
-	c, _ := NewConf("./config.yaml")
-	for _, v := range c.User {
-		for _, qq := range v.QqBotRevue.Qq {
-			fmt.Println(v.Name, qq)
-		}
-	}
-}
+//func main() {
+//	c, _ := NewConf("./config.yaml")
+//	for _, v := range c.User {
+//		for _, qq := range v.QqBotRevue.Qq {
+//			fmt.Println(v.Name, qq)
+//		}
+//	}
+//}
