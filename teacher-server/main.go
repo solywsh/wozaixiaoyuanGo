@@ -26,6 +26,7 @@ func operation() {
 				eventMap[user.Name] = map[string]int{"morning": 0}
 				eventMap[user.Name] = map[string]int{"afternoon": 0}
 				eventMap[user.Name] = map[string]int{"evening": 0}
+				eventMap[user.Name] = map[string]int{"health": 0}
 			}
 		}
 		timeNow := time.Now().Format("15:04:05")
@@ -55,6 +56,15 @@ func operation() {
 				eventMap[user.Name]["evening"] = 1
 				// 晚检
 				user.EveningSignOperate()
+			}
+
+			if user.HealthCheck.Enable &&
+				timeNow < user.HealthCheck.EndTime &&
+				timeNow > user.HealthCheck.CheckTime &&
+				eventMap[user.Name]["health"] != 1 {
+				eventMap[user.Name]["health"] = 1
+				// 晚检
+				user.HealthCheckOperate()
 			}
 		}
 	}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/ghodss/yaml"
 	"io/ioutil"
 	"log"
@@ -25,20 +26,31 @@ type User struct {
 	MorningCheck   MorningCheck   `yaml:"morningCheck"`
 	AfternoonCheck AfternoonCheck `yaml:"afternoonCheck"`
 	EveningCheck   EveningCheck   `yaml:"eveningCheck"`
+	HealthCheck    HealthCheck    `yaml:"healthCheck"`
 	QqBotRevue     QqBotRevue     `yaml:"qqBotRevue"`
+}
+
+type QqBotRevue struct {
+	Enable bool   `yaml:"enable"`
+	Module string `yaml:"module"`
+	Qq     []Qq   `yaml:"qq"`
+}
+
+type Qq struct {
+	UserId string `yaml:"userId"`
+	Token  string `yaml:"token"`
+}
+
+type HealthCheck struct {
+	Enable    bool   `yaml:"enable"`
+	CheckTime string `yaml:"checkTime"`
+	EndTime   string `yaml:"endTime"`
 }
 
 type EveningCheck struct {
 	CheckTime string `yaml:"checkTime"`
 	EndTime   string `yaml:"endTime"`
 	Enable    bool   `yaml:"enable"`
-}
-
-type QqBotRevue struct {
-	Enable bool   `yaml:"enable"`
-	Module string `yaml:"module"`
-	UserId string `yaml:"userId"`
-	Token  string `yaml:"token"`
 }
 
 type MorningCheck struct {
@@ -61,4 +73,13 @@ func NewConf(yamlPath string) (conf Config, err error) {
 		return conf, err
 	}
 	return conf, nil
+}
+
+func main() {
+	c, _ := NewConf("./config.yaml")
+	for _, v := range c.User {
+		for _, qq := range v.QqBotRevue.Qq {
+			fmt.Println(v.Name, qq)
+		}
+	}
 }
