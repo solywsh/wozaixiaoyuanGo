@@ -171,9 +171,9 @@ func (u User) DailyCheck(seq int) {
 	wg.Wait()
 	log.Println("[dailyCheck]seq =", seq, u.Name, "打卡完成!")
 	if u.QqBotRevue.Module == "brief" {
-		u.qqBotRevueEvent("日检日报代签提醒", "("+u.Name+")"+"签到人数为:", unsignedName)
+		u.qqBotRevueEvent("日检日报代签提醒", "("+u.Name+")"+"代签人数为:", unsignedName)
 	} else {
-		u.qqBotRevueEvent("日检日报代签提醒", "("+u.Name+")"+"签到名单为:", unsignedName)
+		u.qqBotRevueEvent("日检日报代签提醒", "("+u.Name+")"+"代签名单为:", unsignedName)
 	}
 
 }
@@ -274,9 +274,9 @@ func (u User) doSignEvening(unsignedList []map[string]interface{}) {
 	}
 	wg.Wait() // 阻塞等待完成
 	if u.QqBotRevue.Module == "brief" {
-		u.qqBotRevueEvent("晚检代签提醒", "("+u.Name+")"+"签到人数为:", unsignedName)
+		u.qqBotRevueEvent("晚检代签提醒", "("+u.Name+")"+"代签人数为:", unsignedName)
 	} else {
-		u.qqBotRevueEvent("晚检代签提醒", "("+u.Name+")"+"名单为:", unsignedName)
+		u.qqBotRevueEvent("晚检代签提醒", "("+u.Name+")"+"代签名单为:", unsignedName)
 	}
 }
 
@@ -351,9 +351,9 @@ func (u User) HealthCheckOperate() {
 	//log.Println("[HealthCheck]", u.Name, "打卡完成!")
 	log.Println("[dailyCheck]", "打卡完成!")
 	if u.QqBotRevue.Module == "brief" {
-		u.qqBotRevueEvent("健康打卡代签提醒", "("+u.Name+")"+"签到人数为:", unsignedName)
+		u.qqBotRevueEvent("健康打卡代签提醒", "("+u.Name+")"+"代签人数为:", unsignedName)
 	} else {
-		u.qqBotRevueEvent("健康打卡代签提醒", "("+u.Name+")"+"签到名单为:", unsignedName)
+		u.qqBotRevueEvent("健康打卡代签提醒", "("+u.Name+")"+"代签名单为:", unsignedName)
 	}
 
 }
