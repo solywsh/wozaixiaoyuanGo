@@ -120,6 +120,7 @@ func (u User) checkForStudent(stuName, stuId, seq string) {
 }
 
 func (u User) DailyCheck(seq int) {
+	log.Println("[dailyCheck]seq =", seq, u.Name, "开始代签")
 	client := resty.New()
 	page := 1
 	var unsignedStuId []string
@@ -210,6 +211,7 @@ func (u User) getEveningSignId() (signId string) {
 }
 
 func (u User) getUnsignedList(signId string) (unsignedList []map[string]interface{}) {
+
 	url := "https://teacher.wozaixiaoyuan.com/signManage/getSignLogs.json"
 	client := resty.New()
 	page := 1
@@ -246,6 +248,7 @@ func (u User) getUnsignedList(signId string) (unsignedList []map[string]interfac
 }
 
 func (u User) doSignEvening(unsignedList []map[string]interface{}) {
+	log.Println("[doSignEvening]", u.Name, "开始代签")
 	url := "https://teacher.wozaixiaoyuan.com/signManage/adminSign.json"
 	var unsignedName []string
 	wg.Add(len(unsignedList))
@@ -273,6 +276,7 @@ func (u User) doSignEvening(unsignedList []map[string]interface{}) {
 		}(unsignedInfo)
 	}
 	wg.Wait() // 阻塞等待完成
+	log.Println("[doSignEvening]", u.Name, "代签完成")
 	if u.QqBotRevue.Module == "brief" {
 		u.qqBotRevueEvent("晚检代签提醒", "("+u.Name+")"+"代签人数为:", unsignedName)
 	} else {
@@ -301,6 +305,7 @@ func (u User) EveningSignOperate() {
 }
 
 func (u User) HealthCheckOperate() {
+	log.Println("[HealthCheckOperate]", "代签完成!")
 	client := resty.New()
 	page := 1
 	var unsignedStuId []string
@@ -315,14 +320,14 @@ func (u User) HealthCheckOperate() {
 			"User-Agent": u.UserAgent,
 		}).Post("https://teacher.wozaixiaoyuan.com/health/getNoHealthUsers.json")
 		if err != nil {
-			log.Println("[HealthCheck]", u.Name, "未打卡名单请求错误,错误信息为:"+err.Error())
+			log.Println("[HealthCheckOperate]", u.Name, "未打卡名单请求错误,错误信息为:"+err.Error())
 			return
 		}
 		postInfo := gojsonq.New().JSONString(string(post.Body()))
 		if postInfo.Find("code") != -10 {
 			if len(postInfo.Reset().Find("data").([]interface{})) == 0 {
 				if page == 1 {
-					log.Println("[HealthCheck]seq=", u.Name, "没有打卡信息或者打卡没有开始!")
+					log.Println("[HealthCheckOperate]seq=", u.Name, "没有打卡信息或者打卡没有开始!")
 					//u.qqBotRevueEvent("日检日报代签提醒", "没有打卡信息或者打卡没有开始!")
 					return
 				}
@@ -336,7 +341,7 @@ func (u User) HealthCheckOperate() {
 			page++
 			//time.Sleep(1 * time.Second)
 		} else {
-			log.Println("[HealthCheck]", u.Name, "jwsession失效,请更换!")
+			log.Println("[HealthCheckOperate]", u.Name, "jwsession失效,请更换!")
 			u.qqBotRevueEvent("健康打卡代签提醒", "jwsession失效,请更换!")
 			break
 		}
@@ -348,8 +353,8 @@ func (u User) HealthCheckOperate() {
 		//time.Sleep(1 * time.Second)
 	}
 	wg.Wait()
-	//log.Println("[HealthCheck]", u.Name, "打卡完成!")
-	log.Println("[dailyCheck]", "打卡完成!")
+
+	log.Println("[HealthCheckOperate]", "打卡完成!")
 	if u.QqBotRevue.Module == "brief" {
 		u.qqBotRevueEvent("健康打卡代签提醒", "("+u.Name+")"+"代签人数为:", unsignedName)
 	} else {
