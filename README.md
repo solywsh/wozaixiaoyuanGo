@@ -11,7 +11,7 @@
 ```yaml
 user:
   # 姓名,id
-  - name: 王世浩
+  - name: '张三'
     # 晨检
     morningCheck:
       enable: true # 是否开启,true/false,如果为空[checkTime]和[endTime]可以为空
