@@ -2,9 +2,11 @@
 
 ## How to use
 
-### 学生版（服务器后台运行）
+### 学生版-服务器运行
 
-创建或修改`config.yaml`文件
+> 此版本建议配置完成之后运行在服务器端
+
+在`wozaixiaoyuanGo/student`目录下，创建或修改`config.yaml`文件（注意对齐否则可能无法识别）
 
 ```yaml
 user:
@@ -92,13 +94,15 @@ user:
     city:
 ```
 
-#### 注意
+> 注意
 
 由于默认西安石油大学学生使用，在提交表单时并没有提供动态的更改表单内容，如果你为其他学校的学生，请执行更改`main.go`相关函数的内容。其中`CheckOperate()`用以执行日检日报，`doEveningCheck()`用以执行晚上定位签到。
 
-### 导员版
+### 老师版-客户端运行
 
-创建或者修改`config.yaml`以下内容：
+> 此版本可以直接在电脑上运行，如果你在Windows系统上运行，下载[Releases · solywsh/wozaixiaoyuanGo (github.com)](https://github.com/solywsh/wozaixiaoyuanGo/releases)的压缩包完成配置文件即可使用。
+
+在`wozaixiaoyuanGo/teacher`目录下，创建或者修改`config.yaml`以下内容：
 
 | key       | function                         |
 | --------- | -------------------------------- |
@@ -121,6 +125,16 @@ province: 陕西省
 city: 西安市
 ```
 
-然后执行程序即可：
+然后执行程序即可（由于后期改为goroutine的方式发送数据，速度可能会快一些），示例：
 
 ![demo](demo.gif)
+
+### 老师版-服务器运行
+
+> 此版本建议配置完成之后运行在服务器端，并且支持多人。
+
+在`wozaixiaoyuanGo/teacher-server`目录下，创建或者修改`config.yaml`以下内容：
+
+```yaml
+```
+

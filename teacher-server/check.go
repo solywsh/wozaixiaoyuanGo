@@ -33,7 +33,7 @@ func (u User) qqBotRevueEvent(arg ...interface{}) {
 		return
 	}
 	var content string
-	if len(arg) == 3 {
+	if len(arg) >= 3 {
 		if u.QqBotRevue.Module == "brief" {
 			content = arg[1].(string) + strconv.Itoa(len(arg[2].([]string)))
 		} else {
@@ -45,8 +45,8 @@ func (u User) qqBotRevueEvent(arg ...interface{}) {
 	} else {
 		content = arg[1].(string)
 	}
-	url := "http://revue.magicode123.cn:5000/send_private_msg"
 
+	url := "http://revue.magicode123.cn:5000/send_private_msg"
 	// 发送消息列表
 	for _, qq := range u.QqBotRevue.Qq {
 		go func(qq Qq) {
@@ -78,6 +78,8 @@ func getSha256(src string) string {
 }
 
 func (u User) checkForStudent(stuName, stuId, seq string) {
+	defer wg.Done()
+
 	province := u.Province
 	city := u.City
 	now := time.Now()
@@ -116,7 +118,7 @@ func (u User) checkForStudent(stuName, stuId, seq string) {
 		return
 	}
 	// log.Println("[doSignEvening]", u.Name, stuName, "签到成功")
-	wg.Done()
+
 }
 
 func (u User) DailyCheck(seq int) {
@@ -255,6 +257,8 @@ func (u User) doSignEvening(unsignedList []map[string]interface{}) {
 	for _, unsignedInfo := range unsignedList {
 		unsignedName = append(unsignedName, unsignedInfo["name"].(string))
 		go func(info map[string]interface{}) {
+			defer wg.Done()
+
 			client := resty.New()
 			post, err := client.R().SetHeaders(map[string]string{
 				"JWSESSION": u.Jwsession,
@@ -272,11 +276,10 @@ func (u User) doSignEvening(unsignedList []map[string]interface{}) {
 			} else {
 				//log.Println("[doSignEvening]", u.Name, info["name"].(string), "签到成功")
 			}
-			wg.Done()
 		}(unsignedInfo)
 	}
 	wg.Wait() // 阻塞等待完成
-	log.Println("[doSignEvening]", u.Name, "代签完成")
+	log.Println("[doSignEvening]", u.Name, "代签完成!")
 	if u.QqBotRevue.Module == "brief" {
 		u.qqBotRevueEvent("晚检代签提醒", "("+u.Name+")"+"代签人数为:", unsignedName)
 	} else {
@@ -296,7 +299,6 @@ func (u User) EveningSignOperate() {
 		unsignedList := u.getUnsignedList(signId)
 		if len(unsignedList) != 0 {
 			u.doSignEvening(unsignedList)
-			log.Println("[doSignEvening]", u.Name, "代签完成!")
 		} else {
 			log.Println("[doSignEvening]", u.Name, "获取签到名单失败,可能所有同学已经签到")
 			u.qqBotRevueEvent("晚检代签提醒", "("+u.Name+")"+"未到(或已过)签到时间")
@@ -364,6 +366,8 @@ func (u User) HealthCheckOperate() {
 }
 
 func (u User) healthCheckForStudent(stuName, stuId string) {
+	defer wg.Done()
+
 	province := "陕西省"
 	city := "西安市"
 	now := time.Now()
@@ -401,6 +405,6 @@ func (u User) healthCheckForStudent(stuName, stuId string) {
 		return
 	}
 	//log.Println("[doSignEvening]", u.Name, stuName, "签到成功")
-	log.Println("[healthCheckForStudent]", stuName, "签到成功")
-	wg.Done()
+	//log.Println("[healthCheckForStudent]", stuName, "签到成功")
+
 }
