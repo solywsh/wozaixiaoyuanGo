@@ -143,7 +143,7 @@ func (u User) DailyCheck(seq int) {
 			return
 		}
 		postInfo := gojsonq.New().JSONString(string(post.Body()))
-		if postInfo.Find("code") != -10 {
+		if postInfo.Find("code") != float64(-10) {
 			if len(postInfo.Reset().Find("data").([]interface{})) == 0 {
 				if page == 1 {
 					log.Println("[dailyCheck]seq=", seq, u.Name, "没有打卡信息或者打卡没有开始!")
@@ -256,9 +256,9 @@ func (u User) doSignEvening(unsignedList []map[string]interface{}) {
 	wg.Add(len(unsignedList))
 	for _, unsignedInfo := range unsignedList {
 		unsignedName = append(unsignedName, unsignedInfo["name"].(string))
+		time.Sleep(1 * time.Microsecond)
 		go func(info map[string]interface{}) {
 			defer wg.Done()
-
 			client := resty.New()
 			post, err := client.R().SetHeaders(map[string]string{
 				"JWSESSION": u.Jwsession,

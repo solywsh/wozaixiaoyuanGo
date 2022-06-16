@@ -68,7 +68,7 @@ func checkForStudent(stuName, stuId, seq, jwsession, userAgent string) {
 		name:     stuName,
 	}
 	postJson := gojsonq.New().JSONString(string(post.Body()))
-	if int(postJson.Reset().Find("code").(float64)) == 0 {
+	if postJson.Reset().Find("code").(float64) == float64(0) {
 		msg.code = 1
 		msg.status = "正常"
 	} else {
@@ -107,7 +107,7 @@ func dailyCheck(seq int) {
 		}
 		//postMap := JsonByteToMap(post.Body())
 		postInfo := gojsonq.New().JSONString(string(post.Body()))
-		if postInfo.Find("code") != -10 {
+		if postInfo.Find("code") != float64(-10) {
 			if len(postInfo.Reset().Find("data").([]interface{})) == 0 {
 				if page == 1 {
 					cmd.Send(printInfo{code: 2, funcName: "dailyCheck", info: "没有打卡信息或者打卡没有开始!"})
@@ -128,7 +128,6 @@ func dailyCheck(seq int) {
 			cmd.Send(printInfo{code: 2, funcName: "dailyCheck", info: "jwsession失效,请更换!"})
 			pause()
 			cmd.Send(tea.Quit())
-			break
 		}
 	}
 	cmd.Send(printInfo{code: 2, funcName: "dailyCheck", info: "开始执行打卡.."})
@@ -160,7 +159,7 @@ func getEveningSignId(jwsession string) (signId string) {
 	//postInfo := JsonByteToMap(post.Body())
 	//fmt.Println(string(post.Body()))
 	postInfo := gojsonq.New().JSONString(string(post.Body()))
-	if int(postInfo.Find("code").(float64)) == 0 {
+	if postInfo.Find("code").(float64) == float64(0) {
 		signEndTime := postInfo.Reset().Find("data.[0].end").(string)
 		signBeginTime := postInfo.Reset().Find("data.[0].start").(string)
 		signId := postInfo.Reset().Find("data.[0].id").(string)
@@ -197,7 +196,7 @@ func getUnsignedList(signId, jwsession string) (unsignedList []map[string]interf
 		}
 		postInfo := gojsonq.New().JSONString(string(post.Body()))
 		//fmt.Println(reflect.TypeOf(postInfo.Find("data.[0]")))
-		if int(postInfo.Reset().Find("code").(float64)) == 0 && len(postInfo.Reset().Find("data").([]interface{})) != 0 {
+		if postInfo.Reset().Find("code").(float64) == float64(0) && len(postInfo.Reset().Find("data").([]interface{})) != 0 {
 			selectInfo := postInfo.Reset().From("data").Select("name", "id").Get() // 只提取出id和name
 			for _, info := range selectInfo.([]interface{}) {
 				unsignedList = append(unsignedList, info.(map[string]interface{}))
@@ -238,7 +237,7 @@ func doSignEvening(unsignedList []map[string]interface{}, jwsession string) {
 			name:     unsignedInfo["name"].(string),
 		}
 		rJson := gojsonq.New().JSONString(string(post.Body()))
-		if int(rJson.Reset().Find("code").(float64)) == 0 {
+		if rJson.Reset().Find("code").(float64) == float64(0) {
 			msg.code = 1
 			msg.status = "正常"
 		} else {

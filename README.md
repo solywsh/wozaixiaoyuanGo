@@ -6,6 +6,8 @@
 
 > 此版本建议配置完成之后运行在服务器端
 
+![QQ图片20220607163750](http://cdnimg.violetwsh.com/img/QQ%E5%9B%BE%E7%89%8720220607163750.png)
+
 在`wozaixiaoyuanGo/student`目录下，创建或修改`config.yaml`文件（注意对齐否则可能无法识别）
 
 ```yaml
@@ -132,6 +134,8 @@ city: 西安市
 ### 老师版-服务器运行
 
 > 此版本建议配置完成之后运行在服务器端，并且支持多人。
+
+![img](http://cdnimg.violetwsh.com/img/%5D@E1%5D4%7D$~LG%7D%7DC@TZ_~K_~B.png)
 
 在`wozaixiaoyuanGo/teacher-server`目录下，创建或者修改`config.yaml`以下内容：
 
