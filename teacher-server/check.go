@@ -162,7 +162,7 @@ func (u User) DailyCheck(seq int) {
 		} else {
 			log.Println("[dailyCheck]seq=", seq, u.Name, "jwsession失效,请更换!")
 			u.qqBotRevueEvent("日检日报代签提醒", "jwsession失效,请更换!")
-			break
+			return
 		}
 	}
 	time.Sleep(1 * time.Second)
@@ -291,7 +291,7 @@ func (u User) EveningSignOperate() {
 	signId := u.getEveningSignId()
 	if signId == "0" {
 		log.Println("[doSignEvening]", u.Name, "请求签到信息发生错误")
-		u.qqBotRevueEvent("晚检代签提醒", "("+u.Name+")"+"请求签到信息发生错误")
+		u.qqBotRevueEvent("晚检代签提醒", "("+u.Name+")"+"请求签到信息发生错误,可能是jwsession失效!")
 	} else if signId == "1" {
 		log.Println("[doSignEvening]", u.Name, "未到(或已过)签到时间")
 		u.qqBotRevueEvent("晚检代签提醒", "("+u.Name+")"+"未到(或已过)签到时间")
@@ -307,7 +307,7 @@ func (u User) EveningSignOperate() {
 }
 
 func (u User) HealthCheckOperate() {
-	log.Println("[HealthCheckOperate]", "代签完成!")
+	log.Println("[HealthCheckOperate]", "开始健康打卡代签")
 	client := resty.New()
 	page := 1
 	var unsignedStuId []string
@@ -345,7 +345,7 @@ func (u User) HealthCheckOperate() {
 		} else {
 			log.Println("[HealthCheckOperate]", u.Name, "jwsession失效,请更换!")
 			u.qqBotRevueEvent("健康打卡代签提醒", "jwsession失效,请更换!")
-			break
+			return
 		}
 	}
 	time.Sleep(1 * time.Second)
@@ -362,7 +362,6 @@ func (u User) HealthCheckOperate() {
 	} else {
 		u.qqBotRevueEvent("健康打卡代签提醒", "("+u.Name+")"+"代签名单为:", unsignedName)
 	}
-
 }
 
 func (u User) healthCheckForStudent(stuName, stuId string) {

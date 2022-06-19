@@ -106,9 +106,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			} else if m.index == 1 {
 				m.index = 4
 				go dailyCheck(2)
-			} else {
+			} else if m.index == 2 {
 				m.index = 4
 				go eveningSignOperate()
+			} else {
+				m.index = 4
+				go healthCheckOperate()
 			}
 			return m, nil
 			//return m, tea.Quit
@@ -158,7 +161,7 @@ func (m model) View() string {
 		s += yellow.Render(m.pause.info)
 	}
 	s += "\n按住 Ctrl+C 或 Q 退出\n"
-	s += "power by https://github.com/solywsh/wozaixiaoyuanGo"
+	s += "powered https://github.com/solywsh/wozaixiaoyuanGo"
 	return appStyle.Render(s)
 }
 
@@ -167,7 +170,7 @@ func newModel() model {
 	s := spinner.New()
 	s.Style = spinnerStyle
 	return model{
-		items:         []string{"晨检打卡", "午检打卡", "晚检签到"},
+		items:         []string{"晨检打卡", "午检打卡", "晚检签到", "[研究生]健康打卡"},
 		index:         0,
 		doTask:        false,
 		printInfoList: make([]printInfo, numLastResults),

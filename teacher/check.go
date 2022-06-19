@@ -280,3 +280,141 @@ func eveningSignOperate() {
 		}
 	}
 }
+
+func healthCheckOperate() {
+	client := resty.New()
+	page := 1
+	var unsignedStuId []string
+	var unsignedName []string
+	for {
+		post, err := client.R().SetQueryParams(map[string]string{
+			"date": getDate(),
+			"page": strconv.Itoa(page),
+			"size": "15",
+		}).SetHeaders(map[string]string{
+			"JWSESSION":  yamlConfig.jwsession,
+			"User-Agent": yamlConfig.userAgent,
+		}).Post("https://teacher.wozaixiaoyuan.com/health/getNoHealthUsers.json")
+		if err != nil {
+			//log.Println("[HealthCheckOperate]", u.Name, "未打卡名单请求错误,错误信息为:"+err.Error())
+			msg := printInfo{
+				code:     2,
+				funcName: "healthCheckOperate",
+				info:     "未打卡名单请求错误,错误信息为:" + err.Error(),
+			}
+			cmd.Send(msg)
+			pause()
+			cmd.Send(tea.Quit())
+		}
+		postInfo := gojsonq.New().JSONString(string(post.Body()))
+		if postInfo.Find("code").(float64) == float64(0) {
+			if len(postInfo.Reset().Find("data").([]interface{})) == 0 {
+				if page == 1 {
+					//log.Println("[HealthCheckOperate]seq=", u.Name, "没有打卡信息或者打卡没有开始!")
+					//u.qqBotRevueEvent("日检日报代签提醒", "没有打卡信息或者打卡没有开始!")
+					msg := printInfo{
+						code:     2,
+						funcName: "healthCheckOperate",
+						info:     "没有打卡信息或者打卡没有开始!",
+					}
+					cmd.Send(msg)
+					pause()
+					cmd.Send(tea.Quit())
+				}
+				break
+			}
+			unsignedData := postInfo.Reset().From("data").Select("id", "name").Get()
+			for _, data := range unsignedData.([]interface{}) {
+				unsignedStuId = append(unsignedStuId, data.(map[string]interface{})["id"].(string))
+				unsignedName = append(unsignedName, data.(map[string]interface{})["name"].(string))
+			}
+			page++
+			//time.Sleep(1 * time.Second)
+		} else {
+			msg := printInfo{
+				code:     2,
+				funcName: "healthCheckOperate",
+				info:     "jwsession可能失效,请更换!",
+			}
+			cmd.Send(msg)
+			pause()
+			cmd.Send(tea.Quit())
+		}
+	}
+	time.Sleep(1 * time.Second)
+	wg.Add(len(unsignedStuId))
+	for i := 0; i < len(unsignedStuId); i++ {
+		go healthCheckForStudent(unsignedName[i], unsignedStuId[i])
+		//time.Sleep(1 * time.Second)
+	}
+	wg.Wait()
+	msg := printInfo{
+		code:     2,
+		funcName: "healthCheckOperate",
+		info:     "打卡完成",
+	}
+	cmd.Send(msg)
+	pause()
+	cmd.Send(tea.Quit())
+}
+
+func healthCheckForStudent(stuName, stuId string) {
+	defer wg.Done()
+
+	now := time.Now()
+	signTime := strconv.FormatInt(now.UnixNano()/1e6, 10) //时间戳精确到毫秒
+	content := yamlConfig.province + "_" + signTime + "_" + yamlConfig.city
+	signatureHeader := getSha256(content)
+	client := resty.New()
+	post, err := client.R().SetHeaders(map[string]string{
+		"JWSESSION":  yamlConfig.jwsession,
+		"User-Agent": yamlConfig.userAgent,
+	}).SetQueryParams(map[string]string{
+		"answers":         "[\"0\"]",
+		"temperature":     "36.5",
+		"userId":          stuId,
+		"latitude":        "",
+		"longitude":       "",
+		"country":         "中国",
+		"city":            "西安市",
+		"district":        "鄠邑区",
+		"province":        "陕西省",
+		"township":        "",
+		"street":          "",
+		"areacode":        "",
+		"towncode":        "156",
+		"timestampHeader": signTime,
+		"signatureHeader": signatureHeader,
+	}).Post("https://teacher.wozaixiaoyuan.com/health/save.json")
+	if err != nil {
+		msg := printInfo{
+			code:     3,
+			funcName: "healthCheckForStudent",
+			name:     stuName,
+			info:     "执行代打卡发生错误:" + err.Error(),
+			status:   "错误",
+		}
+		cmd.Send(msg)
+		return
+	}
+	postJson := gojsonq.New().JSONString(string(post.Body()))
+	if int(postJson.Reset().Find("code").(float64)) != 0 {
+		msg := printInfo{
+			code:     3,
+			funcName: "healthCheckForStudent",
+			name:     stuName,
+			info:     "执行代打卡发生错误:" + string(post.Body()),
+			status:   "错误",
+		}
+		cmd.Send(msg)
+	} else {
+		msg := printInfo{
+			code:     1,
+			funcName: "healthCheckForStudent",
+			name:     stuName,
+			status:   "正常",
+		}
+		cmd.Send(msg)
+	}
+	return
+}
