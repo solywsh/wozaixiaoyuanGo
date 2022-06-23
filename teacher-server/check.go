@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"github.com/go-resty/resty/v2"
 	"github.com/thedevsaddam/gojsonq"
 	"log"
@@ -326,7 +327,8 @@ func (u User) HealthCheckOperate() {
 			return
 		}
 		postInfo := gojsonq.New().JSONString(string(post.Body()))
-		if postInfo.Find("code") != -10 {
+		if postInfo.Find("code").(float64) != float64(-10) {
+			fmt.Println(post.String())
 			if len(postInfo.Reset().Find("data").([]interface{})) == 0 {
 				if page == 1 {
 					log.Println("[HealthCheckOperate]seq=", u.Name, "没有打卡信息或者打卡没有开始!")
