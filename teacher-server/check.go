@@ -8,6 +8,7 @@ import (
 	"github.com/thedevsaddam/gojsonq"
 	"log"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -50,7 +51,7 @@ func (u User) qqBotRevueEvent(arg ...interface{}) {
 	url := "http://revue.magicode123.cn:5000/send_private_msg"
 	// 发送消息列表
 	for _, qq := range u.QqBotRevue.Qq {
-		go func(qq Qq) {
+		func(qq Qq) {
 			client := resty.New()
 			_, err := client.R().SetHeaders(map[string]string{
 				"Content-Type": "application/json",
@@ -78,67 +79,98 @@ func getSha256(src string) string {
 	return sha256String
 }
 
-func (u User) checkForStudent(stuName, stuId, seq string) {
-	defer wg.Done()
-
-	province := u.Province
-	city := u.City
-	now := time.Now()
-	signTime := strconv.FormatInt(now.UnixNano()/1e6, 10) //时间戳精确到毫秒
-
-	content := province + "_" + signTime + "_" + city
-	signatureHeader := getSha256(content)
+func (u User) checkForStudent(stuName, stuId string) int {
 	client := resty.New()
+	payload := strings.NewReader(`{"location":"陕西省/西安市/鄠邑区","t1":"是","t2":"绿色","t3":"是","type":0}`)
 	post, err := client.R().SetHeaders(map[string]string{
-		"JWSESSION":  u.Jwsession,
-		"User-Agent": u.UserAgent,
-	}).SetQueryParams(map[string]string{
-		"answers":         "[\"0\"]",
-		"seq":             seq,
-		"temperature":     "36.5",
-		"userId":          stuId,
-		"latitude":        "",
-		"longitude":       "",
-		"country":         "",
-		"city":            "",
-		"district":        "",
-		"province":        "",
-		"township":        "",
-		"street":          "",
-		"areacode":        "",
-		"timestampHeader": signTime,
-		"signatureHeader": signatureHeader,
-	}).Post("https://teacher.wozaixiaoyuan.com/heat/save.json")
+		"JWSESSION":      u.Jwsession,
+		"User-Agent":     u.UserAgent,
+		"Cookie":         "JWSESSION=" + u.Jwsession,
+		"Host":           "gw.wozaixiaoyuan.com",
+		"Content-Length": strconv.Itoa(payload.Len()),
+	}).SetBody(payload).Post("https://gw.wozaixiaoyuan.com/health/mobile/manage/agentSave?logId=" + stuId)
 	if err != nil {
 		log.Println("[checkForStudent]", u.Name, stuName, "执行代打卡发生错误:"+err.Error())
-		return
+		return -1
 	}
 	postJson := gojsonq.New().JSONString(string(post.Body()))
 	if int(postJson.Reset().Find("code").(float64)) != 0 {
-		log.Println("[checkForStudent]", u.Name, stuName, "执行代打卡请求错误:"+string(post.Body()))
-		return
+		log.Println("[checkForStudent]", u.Name, stuName, "执行代打卡请求错误:"+string(post.Body()), stuId)
+		return -1
 	}
-	// log.Println("[doSignEvening]", u.Name, stuName, "签到成功")
-
+	log.Println("[doSignEvening]", u.Name, stuName, "签到成功")
+	return 0
 }
+
+//
+//func (u User) DailyCheck(seq int) {
+//	log.Println("[dailyCheck]seq =", seq, u.Name, "开始代签")
+//	client := resty.New()
+//	page := 1
+//	var unsignedStuId []string
+//	var unsignedName []string
+//	for {
+//		post, err := client.R().SetHeaders(map[string]string{
+//			"JWSESSION":  u.Jwsession,
+//			"User-Agent": u.UserAgent,
+//			"Cookie":     "JWSESSION=" + u.Jwsession,
+//		}).Post("https://gw.wozaixiaoyuan.com/health/mobile/manage/getUsers?date=" + getDate() + "&batch=170000" + strconv.Itoa(seq) + "&page=" + strconv.Itoa(page) + "&size=20&state=1&keyword=&type=0")
+//		if err != nil {
+//			log.Println("[dailyCheck]", u.Name, "未打卡名单请求错误,错误信息为:"+err.Error())
+//			return
+//		}
+//		postInfo := gojsonq.New().JSONString(string(post.Body()))
+//		log.Println("[dailyCheck]加载第", page, "页未打卡名单")
+//		if postInfo.Find("code") != float64(-10) {
+//			if len(postInfo.Reset().Find("data").([]interface{})) == 0 {
+//				if page == 1 {
+//					log.Println("[dailyCheck]seq=", seq, u.Name, "没有打卡信息或者打卡没有开始!")
+//					u.qqBotRevueEvent("日检日报代签提醒", "没有打卡信息或者打卡没有开始!")
+//					return
+//				}
+//				break
+//			}
+//			unsignedData := postInfo.Reset().From("data").Select("id", "name").Get()
+//			for _, data := range unsignedData.([]interface{}) {
+//				unsignedStuId = append(unsignedStuId, data.(map[string]interface{})["id"].(string))
+//				unsignedName = append(unsignedName, data.(map[string]interface{})["name"].(string))
+//			}
+//			page++
+//			time.Sleep(time.Second)
+//		} else {
+//			log.Println("[dailyCheck]seq=", seq, u.Name, "jwsession失效,请更换!")
+//			u.qqBotRevueEvent("日检日报代签提醒", "jwsession失效,请更换!")
+//			return
+//		}
+//	}
+//	time.Sleep(5 * time.Second)
+//	wg.Add(len(unsignedStuId))
+//	for i := 0; i < len(unsignedStuId); i++ {
+//		u.checkForStudent(unsignedName[i], unsignedStuId[i])
+//		time.Sleep(3 * time.Second)
+//	}
+//	wg.Wait()
+//	log.Println("[dailyCheck]seq =", seq, u.Name, "打卡完成!")
+//	if u.QqBotRevue.Module == "brief" {
+//		u.qqBotRevueEvent("日检日报代签提醒", "("+u.Name+")"+"代签人数为:", unsignedName)
+//	} else {
+//		u.qqBotRevueEvent("日检日报代签提醒", "("+u.Name+")"+"代签名单为:", unsignedName)
+//	}
+//
+//}
 
 func (u User) DailyCheck(seq int) {
 	log.Println("[dailyCheck]seq =", seq, u.Name, "开始代签")
 	client := resty.New()
-	page := 1
-	var unsignedStuId []string
+	sleepTime := 1000
 	var unsignedName []string
+	var num int
 	for {
-		post, err := client.R().SetQueryParams(map[string]string{
-			"seq":  strconv.Itoa(seq),
-			"date": getDate(),
-			"type": "0",
-			"page": strconv.Itoa(page),
-			"size": "20",
-		}).SetHeaders(map[string]string{
+		post, err := client.R().SetHeaders(map[string]string{
 			"JWSESSION":  u.Jwsession,
 			"User-Agent": u.UserAgent,
-		}).Post("https://teacher.wozaixiaoyuan.com/heat/getHeatUsers.json")
+			"Cookie":     "JWSESSION=" + u.Jwsession,
+		}).Post("https://gw.wozaixiaoyuan.com/health/mobile/manage/getUsers?date=" + getDate() + "&batch=170000" + strconv.Itoa(seq) + "&page=1&size=20&state=1&keyword=&type=0")
 		if err != nil {
 			log.Println("[dailyCheck]", u.Name, "未打卡名单请求错误,错误信息为:"+err.Error())
 			return
@@ -146,33 +178,30 @@ func (u User) DailyCheck(seq int) {
 		postInfo := gojsonq.New().JSONString(string(post.Body()))
 		if postInfo.Find("code") != float64(-10) {
 			if len(postInfo.Reset().Find("data").([]interface{})) == 0 {
-				if page == 1 {
-					log.Println("[dailyCheck]seq=", seq, u.Name, "没有打卡信息或者打卡没有开始!")
-					u.qqBotRevueEvent("日检日报代签提醒", "没有打卡信息或者打卡没有开始!")
-					return
-				}
 				break
+			} else {
+				num += len(postInfo.Reset().Find("data").([]interface{}))
 			}
-			unsignedData := postInfo.Reset().From("data").Select("userId", "name").Get()
+			unsignedData := postInfo.Reset().From("data").Select("id", "name").Get()
 			for _, data := range unsignedData.([]interface{}) {
-				unsignedStuId = append(unsignedStuId, data.(map[string]interface{})["userId"].(string))
-				unsignedName = append(unsignedName, data.(map[string]interface{})["name"].(string))
+				status := u.checkForStudent(data.(map[string]interface{})["name"].(string), data.(map[string]interface{})["id"].(string))
+				if status == 0 {
+					sleepTime -= 500
+					if sleepTime < 0 {
+						sleepTime = 0
+					}
+				} else {
+					unsignedName = append(unsignedName, data.(map[string]interface{})["name"].(string))
+					sleepTime += 500
+				}
+				time.Sleep(time.Millisecond * time.Duration(sleepTime))
 			}
-			page++
-			//time.Sleep(1 * time.Second)
 		} else {
 			log.Println("[dailyCheck]seq=", seq, u.Name, "jwsession失效,请更换!")
 			u.qqBotRevueEvent("日检日报代签提醒", "jwsession失效,请更换!")
 			return
 		}
 	}
-	time.Sleep(1 * time.Second)
-	wg.Add(len(unsignedStuId))
-	for i := 0; i < len(unsignedStuId); i++ {
-		go u.checkForStudent(unsignedName[i], unsignedStuId[i], strconv.Itoa(seq))
-		//time.Sleep(1 * time.Second)
-	}
-	wg.Wait()
 	log.Println("[dailyCheck]seq =", seq, u.Name, "打卡完成!")
 	if u.QqBotRevue.Module == "brief" {
 		u.qqBotRevueEvent("日检日报代签提醒", "("+u.Name+")"+"代签人数为:", unsignedName)
@@ -181,7 +210,6 @@ func (u User) DailyCheck(seq int) {
 	}
 
 }
-
 func (u User) getEveningSignId() (signId string) {
 	client := resty.New()
 
@@ -307,6 +335,65 @@ func (u User) EveningSignOperate() {
 	}
 }
 
+//func (u User) HealthCheckOperate() {
+//	log.Println("[HealthCheckOperate]", "开始健康打卡代签")
+//	client := resty.New()
+//	page := 1
+//	var unsignedStuId []string
+//	var unsignedName []string
+//	for {
+//		post, err := client.R().SetQueryParams(map[string]string{
+//			"date": getDate(),
+//			"page": strconv.Itoa(page),
+//			"size": "15",
+//		}).SetHeaders(map[string]string{
+//			"JWSESSION":  u.Jwsession,
+//			"User-Agent": u.UserAgent,
+//		}).Post("https://teacher.wozaixiaoyuan.com/health/getNoHealthUsers.json")
+//		if err != nil {
+//			log.Println("[HealthCheckOperate]", u.Name, "未打卡名单请求错误,错误信息为:"+err.Error())
+//			return
+//		}
+//		postInfo := gojsonq.New().JSONString(string(post.Body()))
+//		if postInfo.Find("code").(float64) != float64(-10) {
+//			fmt.Println(post.String())
+//			if len(postInfo.Reset().Find("data").([]interface{})) == 0 {
+//				if page == 1 {
+//					log.Println("[HealthCheckOperate]seq=", u.Name, "没有打卡信息或者打卡没有开始!")
+//					//u.qqBotRevueEvent("日检日报代签提醒", "没有打卡信息或者打卡没有开始!")
+//					return
+//				}
+//				break
+//			}
+//			unsignedData := postInfo.Reset().From("data").Select("id", "name").Get()
+//			for _, data := range unsignedData.([]interface{}) {
+//				unsignedStuId = append(unsignedStuId, data.(map[string]interface{})["id"].(string))
+//				unsignedName = append(unsignedName, data.(map[string]interface{})["name"].(string))
+//			}
+//			page++
+//			//time.Sleep(1 * time.Second)
+//		} else {
+//			log.Println("[HealthCheckOperate]", u.Name, "jwsession失效,请更换!")
+//			u.qqBotRevueEvent("健康打卡代签提醒", "jwsession失效,请更换!")
+//			return
+//		}
+//	}
+//	time.Sleep(1 * time.Second)
+//	wg.Add(len(unsignedStuId))
+//	for i := 0; i < len(unsignedStuId); i++ {
+//		u.healthCheckForStudent(unsignedName[i], unsignedStuId[i])
+//		time.Sleep(1 * time.Second)
+//	}
+//	wg.Wait()
+//
+//	log.Println("[HealthCheckOperate]", "打卡完成!")
+//	if u.QqBotRevue.Module == "brief" {
+//		u.qqBotRevueEvent("健康打卡代签提醒", "("+u.Name+")"+"代签人数为:", unsignedName)
+//	} else {
+//		u.qqBotRevueEvent("健康打卡代签提醒", "("+u.Name+")"+"代签名单为:", unsignedName)
+//	}
+//}
+
 func (u User) HealthCheckOperate() {
 	log.Println("[HealthCheckOperate]", "开始健康打卡代签")
 	client := resty.New()
@@ -353,8 +440,8 @@ func (u User) HealthCheckOperate() {
 	time.Sleep(1 * time.Second)
 	wg.Add(len(unsignedStuId))
 	for i := 0; i < len(unsignedStuId); i++ {
-		go u.healthCheckForStudent(unsignedName[i], unsignedStuId[i])
-		//time.Sleep(1 * time.Second)
+		u.healthCheckForStudent(unsignedName[i], unsignedStuId[i])
+		time.Sleep(1 * time.Second)
 	}
 	wg.Wait()
 

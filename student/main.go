@@ -3,6 +3,8 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
+	"fmt"
 	"github.com/go-resty/resty/v2"
 	"github.com/thedevsaddam/gojsonq"
 	"log"
@@ -54,6 +56,9 @@ func (u User) CheckOperate(seq int) {
 		"userId":          "",
 		"latitude":        "34.108216",
 		"longitude":       "108.605084",
+		"towncode":        "",
+		"citycode":        "",
+		"areacode":        "",
 		"country":         "中国",
 		"city":            "西安市",
 		"district":        "鄠邑区",
@@ -69,6 +74,12 @@ func (u User) CheckOperate(seq int) {
 		log.Println(u.Name, "打卡失败，网络错误", "seq=", seq)
 		return
 	}
+	var msg WzxyMessage
+	err = json.Unmarshal(post.Body(), &msg)
+	if err != nil {
+		log.Println(u.Name, "打卡失败，解析错误", "seq=", seq)
+	}
+	fmt.Println(msg)
 	postJson := gojsonq.New().JSONString(string(post.Body()))
 	if int(postJson.Reset().Find("code").(float64)) == 0 {
 		u.qqBotRevueEvent("日检日报提醒", "打卡成功")
@@ -76,8 +87,13 @@ func (u User) CheckOperate(seq int) {
 		// 正常
 	} else {
 		u.qqBotRevueEvent("日检日报提醒", "打卡失败,jwsession可能失效")
-		log.Println(u.Name, "打卡失败,jwsession可能失效", "seq=", seq)
+		log.Println(u.Name, "打卡失败,jwsession可能失效", "seq=", seq, post.String())
 	}
+}
+
+type WzxyMessage struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
 }
 
 func (u User) getSignMessage() (res int, signId, logId string) {
@@ -122,6 +138,9 @@ func (u User) doEveningCheck(signId, logId string) {
 		"User-Agent": u.UserAgent,
 	}).SetBody(map[string]string{
 		"signId":    signId,
+		"towncode":  "",
+		"citycode":  "",
+		"areacode":  "",
 		"city":      "西安市",
 		"id":        logId,
 		"latitude":  "34.10154079861111",
@@ -217,5 +236,21 @@ func operation() {
 }
 
 func main() {
-	operation()
+	// operation()
+	user := User{
+		Jwsession: "1bfa5832eb3e406e9a3d73cc882eda13",
+		QqBotRevue: QqBotRevue{
+			Enable: true,
+			Token:  "35406ce1-7dd2-41ca-9e46-d786deaca5f8",
+			UserId: "1228014966",
+		},
+		Name:           "王世浩",
+		MorningCheck:   MorningCheck{},
+		AfternoonCheck: AfternoonCheck{},
+		EveningCheck:   EveningCheck{},
+		Province:       "陕西省",
+		City:           "西安市",
+		UserAgent:      "Mozilla/5.0 (iPhone; CPU iPhone OS 14_2_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.18(0x18001236) NetType/WIFI Language/zh_CN",
+	}
+	user.CheckOperate(1)
 }
