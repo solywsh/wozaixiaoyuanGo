@@ -210,6 +210,7 @@ func (u User) DailyCheck(seq int) {
 	}
 
 }
+
 func (u User) getEveningSignId() (signId string) {
 	client := resty.New()
 

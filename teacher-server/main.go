@@ -71,22 +71,5 @@ func operation() {
 }
 
 func main() {
-	//operation()
-	user := User{
-		QqBotRevue: QqBotRevue{
-			Enable: true,
-			Module: "brief",
-			Qq: []Qq{
-				{
-					UserId: "1228014966",
-					Token:  "35406ce1-7dd2-41ca-9e46-d786deaca5f8",
-				},
-			},
-		},
-		Jwsession: "f46a2d76b23a449c841245fc9c245ec8",
-		Name:      "王天航",
-		UserAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 14_2_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.25(0x1800192b) NetType/4G Language/zh_CN miniProgram/wx8a7eb7a1dbbba6cd",
-	}
-
-	user.DailyCheck(1)
+	operation()
 }
