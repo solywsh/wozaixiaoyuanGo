@@ -102,63 +102,6 @@ func (u User) checkForStudent(stuName, stuId string) int {
 	return 0
 }
 
-//
-//func (u User) DailyCheck(seq int) {
-//	log.Println("[dailyCheck]seq =", seq, u.Name, "开始代签")
-//	client := resty.New()
-//	page := 1
-//	var unsignedStuId []string
-//	var unsignedName []string
-//	for {
-//		post, err := client.R().SetHeaders(map[string]string{
-//			"JWSESSION":  u.Jwsession,
-//			"User-Agent": u.UserAgent,
-//			"Cookie":     "JWSESSION=" + u.Jwsession,
-//		}).Post("https://gw.wozaixiaoyuan.com/health/mobile/manage/getUsers?date=" + getDate() + "&batch=170000" + strconv.Itoa(seq) + "&page=" + strconv.Itoa(page) + "&size=20&state=1&keyword=&type=0")
-//		if err != nil {
-//			log.Println("[dailyCheck]", u.Name, "未打卡名单请求错误,错误信息为:"+err.Error())
-//			return
-//		}
-//		postInfo := gojsonq.New().JSONString(string(post.Body()))
-//		log.Println("[dailyCheck]加载第", page, "页未打卡名单")
-//		if postInfo.Find("code") != float64(-10) {
-//			if len(postInfo.Reset().Find("data").([]interface{})) == 0 {
-//				if page == 1 {
-//					log.Println("[dailyCheck]seq=", seq, u.Name, "没有打卡信息或者打卡没有开始!")
-//					u.qqBotRevueEvent("日检日报代签提醒", "没有打卡信息或者打卡没有开始!")
-//					return
-//				}
-//				break
-//			}
-//			unsignedData := postInfo.Reset().From("data").Select("id", "name").Get()
-//			for _, data := range unsignedData.([]interface{}) {
-//				unsignedStuId = append(unsignedStuId, data.(map[string]interface{})["id"].(string))
-//				unsignedName = append(unsignedName, data.(map[string]interface{})["name"].(string))
-//			}
-//			page++
-//			time.Sleep(time.Second)
-//		} else {
-//			log.Println("[dailyCheck]seq=", seq, u.Name, "jwsession失效,请更换!")
-//			u.qqBotRevueEvent("日检日报代签提醒", "jwsession失效,请更换!")
-//			return
-//		}
-//	}
-//	time.Sleep(5 * time.Second)
-//	wg.Add(len(unsignedStuId))
-//	for i := 0; i < len(unsignedStuId); i++ {
-//		u.checkForStudent(unsignedName[i], unsignedStuId[i])
-//		time.Sleep(3 * time.Second)
-//	}
-//	wg.Wait()
-//	log.Println("[dailyCheck]seq =", seq, u.Name, "打卡完成!")
-//	if u.QqBotRevue.Module == "brief" {
-//		u.qqBotRevueEvent("日检日报代签提醒", "("+u.Name+")"+"代签人数为:", unsignedName)
-//	} else {
-//		u.qqBotRevueEvent("日检日报代签提醒", "("+u.Name+")"+"代签名单为:", unsignedName)
-//	}
-//
-//}
-
 func (u User) DailyCheck(seq int) {
 	log.Println("[dailyCheck]seq =", seq, u.Name, "开始代签")
 	client := resty.New()
@@ -176,7 +119,7 @@ func (u User) DailyCheck(seq int) {
 			return
 		}
 		postInfo := gojsonq.New().JSONString(string(post.Body()))
-		if postInfo.Find("code") != float64(-10) {
+		if postInfo.Find("code") == float64(0) {
 			if len(postInfo.Reset().Find("data").([]interface{})) == 0 {
 				break
 			} else {
