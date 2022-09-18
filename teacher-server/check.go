@@ -108,7 +108,17 @@ func (u User) DailyCheck(seq int) {
 	sleepTime := 1000
 	var unsignedName []string
 	var num int
+	var endTime string
+	if seq == 1 {
+		endTime = u.MorningCheck.EndTime
+	} else {
+		endTime = u.AfternoonCheck.EndTime
+	}
 	for {
+		timeNow := time.Now().Format("15:04:05")
+		if timeNow > endTime {
+			break
+		}
 		post, err := client.R().SetHeaders(map[string]string{
 			"JWSESSION":  u.Jwsession,
 			"User-Agent": u.UserAgent,
