@@ -67,6 +67,7 @@ func operation() {
 				user.HealthCheckOperate()
 			}
 		}
+		time.Sleep(5 * time.Minute)
 	}
 }
 
