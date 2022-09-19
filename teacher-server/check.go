@@ -139,12 +139,12 @@ func (u User) DailyCheck(seq int) {
 			for _, data := range unsignedData.([]interface{}) {
 				status := u.checkForStudent(data.(map[string]interface{})["name"].(string), data.(map[string]interface{})["id"].(string))
 				if status == 0 {
+					unsignedName = append(unsignedName, data.(map[string]interface{})["name"].(string))
 					sleepTime -= 500
 					if sleepTime < 0 {
 						sleepTime = 0
 					}
 				} else {
-					unsignedName = append(unsignedName, data.(map[string]interface{})["name"].(string))
 					sleepTime += 500
 				}
 				time.Sleep(time.Millisecond * time.Duration(sleepTime))
